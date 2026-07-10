@@ -18,21 +18,38 @@
     <main class="app">
       <h1 class="brand">Pendulum</h1>
 
-      <div class="clock-stage" aria-hidden="true">
+      <div class="clock-case" aria-hidden="true">
+        <div class="case-crown"></div>
+
         <div class="clock">
-          <div class="face">
-            <div class="marks" id="marks"></div>
-            <div class="hand hour" id="hour-hand"></div>
-            <div class="hand minute" id="minute-hand"></div>
-            <div class="hand second" id="second-hand"></div>
-            <div class="pivot"></div>
+          <div class="bezel">
+            <div class="face">
+              <div class="face-sheen"></div>
+              <div class="marks" id="marks"></div>
+              <div class="numerals" id="numerals"></div>
+              <div class="dial-brand">MKN</div>
+              <div class="hand hour" id="hour-hand"></div>
+              <div class="hand minute" id="minute-hand"></div>
+              <div class="hand second" id="second-hand">
+                <span class="counter"></span>
+              </div>
+              <div class="pivot"></div>
+            </div>
           </div>
         </div>
 
-        <div class="pendulum" id="pendulum">
-          <div class="rod"></div>
-          <div class="bob"></div>
+        <div class="pendulum-well">
+          <div class="pendulum" id="pendulum">
+            <div class="fulcrum"></div>
+            <div class="rod"></div>
+            <div class="bob">
+              <div class="bob-ring"></div>
+              <div class="bob-core"></div>
+            </div>
+          </div>
         </div>
+
+        <div class="case-base"></div>
       </div>
 
       <p class="time-readout" id="time-readout" aria-live="polite"></p>
@@ -75,6 +92,8 @@
           <input type="time" id="quiet-end" value="06:30" />
         </div>
       </section>
+
+      <p class="credit">Manu Krishnan ©</p>
     </main>
 
     <script src="./app.js" defer></script>

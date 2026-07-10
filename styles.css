@@ -1,17 +1,19 @@
 :root {
-  --bg-top: #f7f2e8;
-  --bg-bottom: #e8dfd0;
+  --bg-top: #f4efe6;
+  --bg-bottom: #ddd2c0;
   --ink: #2a241c;
   --muted: #6d6356;
   --wood: #8b5a2b;
-  --wood-dark: #5c3a1a;
+  --wood-dark: #4a2e14;
+  --brass: #c9a45c;
+  --brass-light: #e8d09a;
+  --brass-dark: #8a6a32;
   --face: #fbf7f0;
-  --face-ring: #c9b8a0;
-  --hand: #2a241c;
-  --second: #a33b2b;
+  --hand: #1f1a14;
+  --second: #9a3a2c;
   --accent: #6b4f2e;
   --panel: rgba(255, 252, 246, 0.72);
-  --shadow: 0 18px 40px rgba(60, 40, 20, 0.12);
+  --shadow: 0 22px 48px rgba(60, 40, 20, 0.16);
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
 }
 
@@ -30,8 +32,8 @@ body {
 body {
   color: var(--ink);
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255, 255, 255, 0.55), transparent 60%),
-    linear-gradient(165deg, var(--bg-top), var(--bg-bottom));
+    radial-gradient(ellipse 70% 45% at 50% 18%, rgba(255, 255, 255, 0.5), transparent 55%),
+    linear-gradient(168deg, var(--bg-top), var(--bg-bottom));
   min-height: 100vh;
   display: grid;
   place-items: center;
@@ -43,7 +45,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1.35rem;
 }
 
 .brand {
@@ -54,20 +56,58 @@ body {
   color: var(--wood-dark);
 }
 
-.clock-stage {
-  width: 100%;
+/* —— Mantel case —— */
+.clock-case {
+  width: min(78vw, 19.5rem);
   display: flex;
   flex-direction: column;
   align-items: center;
+  background: linear-gradient(160deg, #c49a68 0%, #8b5a2b 42%, #5a3718 100%);
+  border-radius: 1.15rem 1.15rem 0.85rem 0.85rem;
+  padding: 0.85rem 0.85rem 0.55rem;
+  box-shadow:
+    var(--shadow),
+    inset 0 1px 0 rgba(255, 230, 180, 0.35),
+    inset 0 -2px 6px rgba(40, 20, 5, 0.25);
+  position: relative;
+}
+
+.clock-case::before {
+  content: "";
+  position: absolute;
+  inset: 0.35rem;
+  border-radius: 0.9rem 0.9rem 0.65rem 0.65rem;
+  border: 1px solid rgba(232, 208, 154, 0.28);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.case-crown {
+  width: 42%;
+  height: 0.45rem;
+  margin-bottom: 0.55rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--brass-dark), var(--brass-light), var(--brass-dark));
+  box-shadow: 0 1px 2px rgba(40, 20, 5, 0.35);
 }
 
 .clock {
-  width: min(72vw, 18rem);
+  width: 100%;
   aspect-ratio: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.bezel {
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  background: linear-gradient(145deg, #d8c4a8, #a88968);
-  padding: 0.55rem;
-  box-shadow: var(--shadow);
+  padding: 0.5rem;
+  background:
+    radial-gradient(circle at 30% 25%, var(--brass-light), var(--brass) 45%, var(--brass-dark));
+  box-shadow:
+    0 4px 10px rgba(40, 20, 5, 0.28),
+    inset 0 1px 1px rgba(255, 240, 200, 0.55);
 }
 
 .face {
@@ -76,38 +116,82 @@ body {
   height: 100%;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 35% 30%, #fffdf8, var(--face) 55%, #efe6d8);
-  border: 1px solid var(--face-ring);
+    radial-gradient(circle at 32% 28%, #fffef9, var(--face) 52%, #ebe1d2);
+  border: 1px solid rgba(160, 140, 110, 0.45);
   overflow: hidden;
+  box-shadow: inset 0 0 24px rgba(90, 70, 40, 0.08);
 }
 
-.marks {
+.face-sheen {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.35), transparent 55%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.marks,
+.numerals {
   position: absolute;
   inset: 0;
+  z-index: 2;
 }
 
-.mark-wrap {
+.mark-wrap,
+.numeral-wrap {
   position: absolute;
   inset: 0;
 }
 
 .mark-wrap i {
   position: absolute;
-  top: 3.5%;
+  top: 3.2%;
   left: 50%;
-  width: 2px;
-  height: 8px;
-  margin-left: -1px;
-  background: var(--muted);
+  width: 1.5px;
+  height: 7px;
+  margin-left: -0.75px;
+  background: rgba(109, 99, 86, 0.7);
   border-radius: 1px;
   font-style: normal;
 }
 
 .mark-wrap i.hour-mark {
-  height: 14px;
-  width: 3px;
-  margin-left: -1.5px;
+  height: 12px;
+  width: 2.5px;
+  margin-left: -1.25px;
   background: var(--ink);
+}
+
+.numeral-wrap b {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  width: 1.75rem;
+  margin-left: -0.875rem;
+  text-align: center;
+  font-size: clamp(0.78rem, 3.4vw, 1rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  font-style: normal;
+  line-height: 1;
+  transform-origin: center center;
+}
+
+.dial-brand {
+  position: absolute;
+  left: 50%;
+  top: 62%;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-size: clamp(0.55rem, 2.4vw, 0.7rem);
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  color: var(--muted);
+  opacity: 0.75;
+  pointer-events: none;
+  user-select: none;
 }
 
 .hand {
@@ -115,27 +199,56 @@ body {
   left: 50%;
   bottom: 50%;
   transform-origin: bottom center;
-  border-radius: 999px;
-  background: var(--hand);
   will-change: transform;
+  z-index: 3;
+  border-radius: 999px;
 }
 
 .hand.hour {
-  width: 5px;
-  height: 28%;
-  margin-left: -2.5px;
+  width: 7px;
+  height: 27%;
+  margin-left: -3.5px;
+  background: linear-gradient(90deg, #5a4e40, var(--hand) 40%, #3a3228);
+  border-radius: 4px 4px 2px 2px;
+  clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%);
 }
 
 .hand.minute {
-  width: 3.5px;
+  width: 5px;
   height: 38%;
-  margin-left: -1.75px;
+  margin-left: -2.5px;
+  background: linear-gradient(90deg, #5a4e40, var(--hand) 40%, #3a3228);
+  border-radius: 3px 3px 1px 1px;
+  clip-path: polygon(25% 0, 75% 0, 100% 100%, 0 100%);
 }
 
 .hand.second {
   width: 2px;
   height: 42%;
   margin-left: -1px;
+  background: linear-gradient(180deg, var(--second), #6e241c);
+  z-index: 4;
+}
+
+.hand.second .counter {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 2px;
+  height: 18%;
+  margin-left: -1px;
+  background: var(--second);
+}
+
+.hand.second .counter::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-left: -0.25rem;
+  border-radius: 50%;
   background: var(--second);
 }
 
@@ -143,42 +256,121 @@ body {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 10px;
-  height: 10px;
-  margin: -5px 0 0 -5px;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
   border-radius: 50%;
-  background: var(--wood-dark);
-  box-shadow: 0 0 0 3px rgba(163, 59, 43, 0.25);
+  background:
+    radial-gradient(circle at 35% 30%, var(--brass-light), var(--brass) 55%, var(--brass-dark));
+  box-shadow:
+    0 0 0 3px rgba(42, 36, 28, 0.85),
+    0 1px 2px rgba(0, 0, 0, 0.25);
+  z-index: 5;
+}
+
+/* —— Pendulum well —— */
+.pendulum-well {
+  width: 58%;
+  height: 9.5rem;
+  margin-top: 0.35rem;
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.35rem 0.35rem 0.55rem 0.55rem;
+  background:
+    linear-gradient(180deg, rgba(20, 12, 6, 0.55), rgba(30, 18, 8, 0.35) 40%, rgba(40, 24, 10, 0.2)),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.25), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.25));
+  box-shadow:
+    inset 0 8px 16px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(232, 208, 154, 0.18);
+  z-index: 0;
+}
+
+.pendulum-well::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 30%);
+  pointer-events: none;
 }
 
 .pendulum {
-  position: relative;
-  width: 2px;
-  height: 7.5rem;
-  margin-top: -0.15rem;
-  transform-origin: top center;
+  position: absolute;
+  left: 50%;
+  top: 0.15rem;
+  width: 3.2rem;
+  height: 8.8rem;
+  margin-left: -1.6rem;
+  transform-origin: 50% 0.45rem;
   transform: rotate(0deg);
   will-change: transform;
 }
 
+.pendulum .fulcrum {
+  position: absolute;
+  left: 50%;
+  top: 0.15rem;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-left: -0.35rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--brass-light), var(--brass-dark));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
 .pendulum .rod {
-  width: 2px;
-  height: 100%;
-  margin: 0 auto;
-  background: linear-gradient(var(--wood), var(--wood-dark));
-  border-radius: 1px;
+  position: absolute;
+  left: 50%;
+  top: 0.45rem;
+  width: 2.5px;
+  height: 6.1rem;
+  margin-left: -1.25px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #6a4a22, var(--brass-light) 45%, #5a3c18);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.2);
 }
 
 .pendulum .bob {
   position: absolute;
   left: 50%;
-  bottom: -0.15rem;
-  width: 1.6rem;
-  height: 1.6rem;
-  margin-left: -0.8rem;
+  top: 6.2rem;
+  width: 2.55rem;
+  height: 2.55rem;
+  margin-left: -1.275rem;
+}
+
+.bob-ring {
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #c9894a, var(--wood) 55%, var(--wood-dark));
-  box-shadow: 0 4px 10px rgba(60, 40, 20, 0.25);
+  background:
+    radial-gradient(circle at 32% 28%, var(--brass-light), var(--brass) 42%, var(--brass-dark) 78%, #5a4218);
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.4),
+    inset 0 1px 2px rgba(255, 240, 200, 0.45),
+    inset 0 -2px 4px rgba(40, 20, 5, 0.35);
+}
+
+.bob-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: -0.575rem 0 0 -0.575rem;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, #f0e0b8, #a88440 60%, #5c4218);
+  box-shadow: inset 0 0 0 1px rgba(90, 60, 20, 0.35);
+}
+
+.case-base {
+  width: 92%;
+  height: 0.55rem;
+  margin-top: 0.45rem;
+  border-radius: 0.2rem;
+  background: linear-gradient(90deg, var(--wood-dark), #7a4a22 50%, var(--wood-dark));
+  box-shadow: 0 2px 4px rgba(40, 20, 5, 0.3);
 }
 
 .time-readout {
@@ -187,6 +379,14 @@ body {
   font-size: 1.05rem;
   letter-spacing: 0.06em;
   color: var(--muted);
+}
+
+.credit {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  opacity: 0.85;
 }
 
 .settings {
@@ -283,6 +483,27 @@ body {
 .bedtime-row input:disabled,
 .row input:disabled + span {
   opacity: 0.45;
+}
+
+@media (max-width: 380px) {
+  .pendulum-well {
+    height: 8rem;
+  }
+
+  .pendulum {
+    height: 7.4rem;
+  }
+
+  .pendulum .rod {
+    height: 5rem;
+  }
+
+  .pendulum .bob {
+    top: 5.1rem;
+    width: 2.2rem;
+    height: 2.2rem;
+    margin-left: -1.1rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

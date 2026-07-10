@@ -29,6 +29,7 @@
 
   const els = {
     marks: document.getElementById("marks"),
+    numerals: document.getElementById("numerals"),
     hourHand: document.getElementById("hour-hand"),
     minuteHand: document.getElementById("minute-hand"),
     secondHand: document.getElementById("second-hand"),
@@ -391,6 +392,23 @@
     els.marks.appendChild(frag);
   }
 
+  function buildNumerals() {
+    if (!els.numerals) return;
+    const frag = document.createDocumentFragment();
+    for (let hour = 1; hour <= 12; hour += 1) {
+      const index = hour % 12; // 12 at top
+      const wrap = document.createElement("span");
+      wrap.className = "numeral-wrap";
+      wrap.style.transform = `rotate(${index * 30}deg)`;
+      const text = document.createElement("b");
+      text.textContent = String(hour);
+      text.style.transform = `rotate(${-index * 30}deg)`;
+      wrap.appendChild(text);
+      frag.appendChild(wrap);
+    }
+    els.numerals.appendChild(frag);
+  }
+
   function pad(n) {
     return String(n).padStart(2, "0");
   }
@@ -405,7 +423,7 @@
     els.minuteHand.style.transform = `rotate(${m * 6}deg)`;
     els.hourHand.style.transform = `rotate(${h * 30}deg)`;
 
-    const swing = Math.sin(s * Math.PI) * 14;
+    const swing = Math.sin(s * Math.PI) * 12;
     els.pendulum.style.transform = `rotate(${swing}deg)`;
 
     const quiet = isQuietHours(now);
@@ -514,6 +532,7 @@
   }
 
   buildMarks();
+  buildNumerals();
   applySettingsToUI();
   bindSettings();
   startPaintLoop();
