@@ -3,16 +3,16 @@
 
   const STORAGE_KEY = "pendulum-settings-v2";
   const ALLOWED_INTERVALS = new Set(["15", "30", "60"]);
-  const STRIKE_GAP = 1.15;
-  // Tubular-bell partial ratios (slightly inharmonic — more clock-like than pure tones).
+  const STRIKE_GAP = 1.25;
+  // Warm mantel-clock gong — lower, softer partials that sit with the wooden tick.
   const BELL_PARTIALS = [
-    { ratio: 1, gain: 1, decay: 3.2 },
-    { ratio: 2.0, gain: 0.55, decay: 2.4 },
-    { ratio: 2.76, gain: 0.35, decay: 2.0 },
-    { ratio: 4.07, gain: 0.18, decay: 1.4 },
-    { ratio: 5.4, gain: 0.1, decay: 1.0 },
+    { ratio: 1, gain: 1, decay: 2.8 },
+    { ratio: 1.5, gain: 0.4, decay: 2.2 },
+    { ratio: 2.0, gain: 0.28, decay: 1.8 },
+    { ratio: 2.67, gain: 0.12, decay: 1.2 },
+    { ratio: 3.5, gain: 0.06, decay: 0.8 },
   ];
-  const BELL_FUNDAMENTAL = 523.25; // C5 — warm mantel-clock pitch
+  const BELL_FUNDAMENTAL = 392; // G4 — deeper mantel gong
   // Schedule far enough ahead that background-tab timer throttling still leaves audio queued.
   const SCHEDULE_AHEAD_MS = 45000;
   const SCHEDULER_POLL_MS = 1000;
@@ -158,26 +158,64 @@
   function scheduleTick(when, isTock) {
     if (!audioCtx || !masterGain) return;
 
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    const filter = audioCtx.createBiquadFilter();
+    // Classic pendulum escapement: short wood/metal click with a soft body resonance.
+    // Tick is a touch brighter; tock is a touch darker — same family, alternating feel.
+    const peak = 0.028;
+    const clickHz = isTock ? 1450 : 1850;
+    const bodyHz = isTock ? 320 : 380;
+    const woodHz = isTock ? 620 : 740;
 
-    osc.type = "square";
-    osc.frequency.value = isTock ? 780 : 920;
-    filter.type = "bandpass";
-    filter.frequency.value = isTock ? 900 : 1200;
-    filter.Q.value = 4;
+    // Escapement “click” — very short, slightly noisy impulse
+    const clickLen = Math.floor(audioCtx.sampleRate * 0.012);
+    const clickBuf = audioCtx.createBuffer(1, clickLen, audioCtx.sampleRate);
+    const clickData = clickBuf.getChannelData(0);
+    for (let i = 0; i < clickData.length; i += 1) {
+      const env = Math.exp(-i / (clickLen * 0.18));
+      clickData[i] = (Math.random() * 2 - 1) * env;
+    }
+    const click = audioCtx.createBufferSource();
+    click.buffer = clickBuf;
+    const clickFilter = audioCtx.createBiquadFilter();
+    clickFilter.type = "bandpass";
+    clickFilter.frequency.value = clickHz;
+    clickFilter.Q.value = 3.5;
+    const clickGain = audioCtx.createGain();
+    clickGain.gain.setValueAtTime(0.0001, when);
+    clickGain.gain.exponentialRampToValueAtTime(peak, when + 0.001);
+    clickGain.gain.exponentialRampToValueAtTime(0.0001, when + 0.018);
+    click.connect(clickFilter);
+    clickFilter.connect(clickGain);
+    clickGain.connect(masterGain);
+    click.start(when);
+    click.stop(when + 0.02);
 
-    gain.gain.setValueAtTime(0.0001, when);
-    gain.gain.exponentialRampToValueAtTime(0.045, when + 0.004);
-    gain.gain.exponentialRampToValueAtTime(0.0001, when + 0.055);
+    // Wooden case / pallet body — muted mid tone that dies fast
+    const wood = audioCtx.createOscillator();
+    const woodGain = audioCtx.createGain();
+    wood.type = "triangle";
+    wood.frequency.setValueAtTime(woodHz, when);
+    wood.frequency.exponentialRampToValueAtTime(woodHz * 0.85, when + 0.05);
+    woodGain.gain.setValueAtTime(0.0001, when);
+    woodGain.gain.exponentialRampToValueAtTime(peak * 0.45, when + 0.002);
+    woodGain.gain.exponentialRampToValueAtTime(0.0001, when + 0.055);
+    wood.connect(woodGain);
+    woodGain.connect(masterGain);
+    wood.start(when);
+    wood.stop(when + 0.06);
 
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(masterGain);
-
-    osc.start(when);
-    osc.stop(when + 0.07);
+    // Soft low body thump (movement / case)
+    const body = audioCtx.createOscillator();
+    const bodyGain = audioCtx.createGain();
+    body.type = "sine";
+    body.frequency.setValueAtTime(bodyHz, when);
+    body.frequency.exponentialRampToValueAtTime(bodyHz * 0.65, when + 0.06);
+    bodyGain.gain.setValueAtTime(0.0001, when);
+    bodyGain.gain.exponentialRampToValueAtTime(peak * 0.35, when + 0.003);
+    bodyGain.gain.exponentialRampToValueAtTime(0.0001, when + 0.07);
+    body.connect(bodyGain);
+    bodyGain.connect(masterGain);
+    body.start(when);
+    body.stop(when + 0.08);
   }
 
   function scheduleBellStrike(when, peak) {
@@ -186,44 +224,66 @@
     const strike = audioCtx.createGain();
     strike.connect(masterGain);
 
-    // Soft metallic “hit” transient
-    const noiseBuf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.04), audioCtx.sampleRate);
-    const data = noiseBuf.getChannelData(0);
-    for (let i = 0; i < data.length; i += 1) {
-      data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+    // Same family as the tick: short wood/metal hammer hit
+    const clickLen = Math.floor(audioCtx.sampleRate * 0.018);
+    const clickBuf = audioCtx.createBuffer(1, clickLen, audioCtx.sampleRate);
+    const clickData = clickBuf.getChannelData(0);
+    for (let i = 0; i < clickData.length; i += 1) {
+      clickData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (clickLen * 0.2));
     }
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = noiseBuf;
-    const noiseFilter = audioCtx.createBiquadFilter();
-    noiseFilter.type = "bandpass";
-    noiseFilter.frequency.value = 2400;
-    noiseFilter.Q.value = 1.2;
-    const noiseGain = audioCtx.createGain();
-    noiseGain.gain.setValueAtTime(peak * 0.35, when);
-    noiseGain.gain.exponentialRampToValueAtTime(0.0001, when + 0.045);
-    noise.connect(noiseFilter);
-    noiseFilter.connect(noiseGain);
-    noiseGain.connect(strike);
-    noise.start(when);
-    noise.stop(when + 0.05);
+    const click = audioCtx.createBufferSource();
+    click.buffer = clickBuf;
+    const clickFilter = audioCtx.createBiquadFilter();
+    clickFilter.type = "bandpass";
+    clickFilter.frequency.value = 1600;
+    clickFilter.Q.value = 2.2;
+    const clickGain = audioCtx.createGain();
+    clickGain.gain.setValueAtTime(0.0001, when);
+    clickGain.gain.exponentialRampToValueAtTime(peak * 0.55, when + 0.0015);
+    clickGain.gain.exponentialRampToValueAtTime(0.0001, when + 0.03);
+    click.connect(clickFilter);
+    clickFilter.connect(clickGain);
+    clickGain.connect(strike);
+    click.start(when);
+    click.stop(when + 0.035);
 
+    // Wooden case bloom under the gong
+    const wood = audioCtx.createOscillator();
+    const woodGain = audioCtx.createGain();
+    wood.type = "triangle";
+    wood.frequency.setValueAtTime(280, when);
+    wood.frequency.exponentialRampToValueAtTime(220, when + 0.25);
+    woodGain.gain.setValueAtTime(0.0001, when);
+    woodGain.gain.exponentialRampToValueAtTime(peak * 0.3, when + 0.008);
+    woodGain.gain.exponentialRampToValueAtTime(0.0001, when + 0.4);
+    wood.connect(woodGain);
+    woodGain.connect(strike);
+    wood.start(when);
+    wood.stop(when + 0.45);
+
+    // Soft gong body — warm, muted, not bright tubular
     BELL_PARTIALS.forEach((partial, index) => {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      const freq = BELL_FUNDAMENTAL * partial.ratio * (1 + (index % 2 === 0 ? 0.0015 : -0.0015));
+      const lowpass = audioCtx.createBiquadFilter();
+      const freq = BELL_FUNDAMENTAL * partial.ratio * (1 + (index % 2 === 0 ? 0.001 : -0.001));
 
-      osc.type = "sine";
+      osc.type = index === 0 ? "sine" : "triangle";
       osc.frequency.setValueAtTime(freq, when);
-      // Slight pitch droop after the strike — like a real tube/bell
-      osc.frequency.exponentialRampToValueAtTime(freq * 0.997, when + partial.decay);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.995, when + partial.decay);
+
+      lowpass.type = "lowpass";
+      lowpass.frequency.value = 1800;
+      lowpass.Q.value = 0.7;
 
       const amp = peak * partial.gain;
       gain.gain.setValueAtTime(0.0001, when);
-      gain.gain.exponentialRampToValueAtTime(amp, when + 0.012);
-      gain.gain.exponentialRampToValueAtTime(amp * 0.45, when + 0.35);
+      gain.gain.exponentialRampToValueAtTime(amp, when + 0.02);
+      gain.gain.exponentialRampToValueAtTime(amp * 0.4, when + 0.45);
       gain.gain.exponentialRampToValueAtTime(0.0001, when + partial.decay);
 
-      osc.connect(gain);
+      osc.connect(lowpass);
+      lowpass.connect(gain);
       gain.connect(strike);
       osc.start(when);
       osc.stop(when + partial.decay + 0.05);
@@ -232,8 +292,7 @@
 
   function scheduleChimes(when, count) {
     for (let i = 0; i < count; i += 1) {
-      // Slightly softer after the first strike so hour counts don’t blast
-      const peak = i === 0 ? 0.025 : 0.02;
+      const peak = i === 0 ? 0.028 : 0.024;
       scheduleBellStrike(when + i * STRIKE_GAP, peak);
     }
   }
