@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f3efe6" />
+    <meta name="description" content="A minimal pendulum clock with optional tick and chime sounds." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Pendulum" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>Pendulum</title>
+  </head>
+  <body>
+    <main class="app">
+      <h1 class="brand">Pendulum</h1>
+
+      <div class="clock-stage" aria-hidden="true">
+        <div class="clock">
+          <div class="face">
+            <div class="marks" id="marks"></div>
+            <div class="hand hour" id="hour-hand"></div>
+            <div class="hand minute" id="minute-hand"></div>
+            <div class="hand second" id="second-hand"></div>
+            <div class="pivot"></div>
+          </div>
+        </div>
+
+        <div class="pendulum" id="pendulum">
+          <div class="rod"></div>
+          <div class="bob"></div>
+        </div>
+      </div>
+
+      <p class="time-readout" id="time-readout" aria-live="polite"></p>
+
+      <section class="settings" aria-label="Sound settings">
+        <label class="row">
+          <input type="checkbox" id="sounds-enabled" />
+          <span>Sounds</span>
+        </label>
+
+        <label class="row">
+          <input type="checkbox" id="tick-enabled" />
+          <span>Tick</span>
+        </label>
+
+        <label class="row">
+          <input type="checkbox" id="chime-enabled" />
+          <span>Chime</span>
+        </label>
+
+        <div class="row chime-row">
+          <label for="chime-interval">Interval</label>
+          <select id="chime-interval">
+            <option value="15">15 min</option>
+            <option value="30" selected>30 min</option>
+            <option value="60">60 min</option>
+          </select>
+          <button type="button" id="chime-preview" class="preview-btn">Play chime</button>
+        </div>
+
+        <label class="row">
+          <input type="checkbox" id="quiet-enabled" />
+          <span>Quiet hours</span>
+        </label>
+
+        <div class="row bedtime-row" id="bedtime-row">
+          <label for="quiet-start">From</label>
+          <input type="time" id="quiet-start" value="21:00" />
+          <label for="quiet-end">to</label>
+          <input type="time" id="quiet-end" value="06:30" />
+        </div>
+      </section>
+    </main>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

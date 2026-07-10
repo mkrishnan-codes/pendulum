@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Pendulum">
+  <rect width="512" height="512" rx="96" fill="#f3efe6"/>
+  <circle cx="256" cy="210" r="140" fill="#d8c4a8"/>
+  <circle cx="256" cy="210" r="118" fill="#fbf7f0"/>
+  <circle cx="256" cy="210" r="8" fill="#5c3a1a"/>
+  <line x1="256" y1="210" x2="256" y2="120" stroke="#2a241c" stroke-width="10" stroke-linecap="round"/>
+  <line x1="256" y1="210" x2="320" y2="250" stroke="#2a241c" stroke-width="7" stroke-linecap="round"/>
+  <line x1="256" y1="210" x2="256" y2="320" stroke="#a33b2b" stroke-width="4" stroke-linecap="round"/>
+  <line x1="256" y1="350" x2="256" y2="430" stroke="#8b5a2b" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="256" cy="448" r="28" fill="#8b5a2b"/>
+</svg>
