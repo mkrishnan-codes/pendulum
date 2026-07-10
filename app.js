@@ -49,6 +49,8 @@
   let settings = loadSettings();
   let audioCtx = null;
   let masterGain = null;
+  let tickGain = null;
+  let chimeGain = null;
   let keepAlive = null;
   let tickSide = 0;
   let nextScheduleWallMs = 0;
@@ -141,6 +143,15 @@
       masterGain.gain.value = 1;
       masterGain.connect(audioCtx.destination);
 
+      // Separate buses so toggles mute already-scheduled notes immediately.
+      tickGain = audioCtx.createGain();
+      tickGain.gain.value = 1;
+      tickGain.connect(masterGain);
+
+      chimeGain = audioCtx.createGain();
+      chimeGain.gain.value = 1;
+      chimeGain.connect(masterGain);
+
       // Near-silent loop keeps the audio graph alive in background tabs.
       keepAlive = audioCtx.createOscillator();
       const keepGain = audioCtx.createGain();
@@ -153,11 +164,21 @@
     if (audioCtx.state === "suspended") {
       audioCtx.resume();
     }
+    applyLiveGains();
     return audioCtx;
   }
 
+  /** Instant mute/unmute for pre-scheduled audio (toggles + quiet hours). */
+  function applyLiveGains(now = new Date()) {
+    if (!masterGain || !tickGain || !chimeGain) return;
+    const allowed = soundsAllowed(now);
+    masterGain.gain.value = settings.soundsEnabled ? 1 : 0;
+    tickGain.gain.value = allowed && settings.tickEnabled ? 1 : 0;
+    chimeGain.gain.value = allowed && settings.chimeEnabled ? 1 : 0;
+  }
+
   function scheduleTick(when, isTock) {
-    if (!audioCtx || !masterGain) return;
+    if (!audioCtx || !tickGain) return;
 
     // Classic pendulum escapement: short wood/metal click with a soft body resonance.
     // Tick is a touch brighter; tock is a touch darker — same family, alternating feel.
@@ -186,7 +207,7 @@
     clickGain.gain.exponentialRampToValueAtTime(0.0001, when + 0.018);
     click.connect(clickFilter);
     clickFilter.connect(clickGain);
-    clickGain.connect(masterGain);
+    clickGain.connect(tickGain);
     click.start(when);
     click.stop(when + 0.02);
 
@@ -200,7 +221,7 @@
     woodGain.gain.exponentialRampToValueAtTime(peak * 0.45, when + 0.002);
     woodGain.gain.exponentialRampToValueAtTime(0.0001, when + 0.055);
     wood.connect(woodGain);
-    woodGain.connect(masterGain);
+    woodGain.connect(tickGain);
     wood.start(when);
     wood.stop(when + 0.06);
 
@@ -214,16 +235,16 @@
     bodyGain.gain.exponentialRampToValueAtTime(peak * 0.35, when + 0.003);
     bodyGain.gain.exponentialRampToValueAtTime(0.0001, when + 0.07);
     body.connect(bodyGain);
-    bodyGain.connect(masterGain);
+    bodyGain.connect(tickGain);
     body.start(when);
     body.stop(when + 0.08);
   }
 
   function scheduleBellStrike(when, peak) {
-    if (!audioCtx || !masterGain) return;
+    if (!audioCtx || !chimeGain) return;
 
     const strike = audioCtx.createGain();
-    strike.connect(masterGain);
+    strike.connect(chimeGain);
 
     // Same family as the tick: short wood/metal hammer hit
     const clickLen = Math.floor(audioCtx.sampleRate * 0.018);
@@ -351,19 +372,16 @@
         continue;
       }
 
-      if (settings.tickEnabled) {
-        scheduleTick(when, tickSide % 2 === 1);
-        tickSide += 1;
-      }
+      // Always queue onto tick/chime buses; live gains mute instantly on toggle.
+      scheduleTick(when, tickSide % 2 === 1);
+      tickSide += 1;
 
-      if (settings.chimeEnabled) {
-        const minutes = at.getMinutes();
-        const seconds = at.getSeconds();
-        const interval = Number(settings.chimeInterval);
-        if (seconds === 0 && shouldChimeAt(minutes, interval)) {
-          const count = strikeCountForMinute(at, minutes);
-          if (count > 0) scheduleChimes(when, count);
-        }
+      const minutes = at.getMinutes();
+      const seconds = at.getSeconds();
+      const interval = Number(settings.chimeInterval);
+      if (seconds === 0 && shouldChimeAt(minutes, interval)) {
+        const count = strikeCountForMinute(at, minutes);
+        if (count > 0) scheduleChimes(when, count);
       }
 
       scheduledKeys.add(key);
@@ -448,13 +466,11 @@
 
     if (settings.soundsEnabled) {
       ensureAudio();
-      if (masterGain) masterGain.gain.value = 1;
-      // Resync schedule cursor so new settings apply soon.
+      // Resync schedule cursor so new settings apply to future notes.
       nextScheduleWallMs = Math.ceil(Date.now() / 1000) * 1000;
       scheduleAhead();
-    } else if (masterGain) {
-      masterGain.gain.value = 0;
     }
+    applyLiveGains();
 
     syncControlState();
     saveSettings();
@@ -462,8 +478,10 @@
 
   function previewChime() {
     ensureAudio();
+    applyLiveGains();
+    if (chimeGain) chimeGain.gain.value = 1;
     if (masterGain) masterGain.gain.value = 1;
-    // Preview a half-hour style single strike, then a double so both are audible.
+    // Preview a half-hour style double strike.
     scheduleChimes(audioCtx.currentTime + 0.02, 2);
   }
 
@@ -516,6 +534,7 @@
   setInterval(() => {
     if (settings.soundsEnabled) {
       if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+      applyLiveGains();
       scheduleAhead();
     }
   }, SCHEDULER_POLL_MS);
